@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beslimedia — Visual Storytellers</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;1,300&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #050505;
+  --white: #f5f0eb;
+  --accent: #ff3c00;
+  --gold: #c9a84c;
+  --mid: #1a1a1a;
+  --nav-h: 68px;
+  --ticker-h: 44px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--black); color:var(--white);
+  font-family:'DM Sans',sans-serif; font-weight:300;
+  overflow-x:hidden; cursor:none;
+}
+
+/* ── CURSOR ── */
+#c-ring {
+  position:fixed; width:34px; height:34px;
+  border:1.5px solid rgba(245,240,235,.5); border-radius:50%;
+  pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width .15s, height .15s, border-color .15s;
+}
+#c-dot {
+  position:fixed; width:4px; height:4px;
+  background:var(--accent); border-radius:50%;
+  pointer-events:none; z-index:10000;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 6px var(--accent);
+}
+#c-ring.big { width:52px; height:52px; border-color:var(--accent); }
+.c-tick {
+  position:fixed; background:rgba(245,240,235,.55);
+  pointer-events:none; z-index:9999;
+}
+.c-tick.h { width:8px; height:1px; transform:translate(-50%,-50%); }
+.c-tick.v { width:1px; height:8px; transform:translate(-50%,-50%); }
+.c-trail {
+  position:fixed; border-radius:50%;
+  background:rgba(255,60,0,.4);
+  pointer-events:none; z-index:9996;
+  transform:translate(-50%,-50%);
+}
+
+/* ── NAV ── */
+nav {
+  position:fixed; top:0; left:0; right:0;
+  height:var(--nav-h); z-index:200;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0 48px;
+  background:rgba(5,5,5,.88);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(245,240,235,.08);
+}
+.nav-logo {
+  font-family:'Bebas Neue',cursive;
+  font-size:1.7rem; letter-spacing:.18em;
+  color:var(--white); text-decoration:none;
+}
+.nav-links { display:flex; gap:36px; list-style:none; }
+.nav-links a {
+  font-family:'Space Mono',monospace;
+  font-size:.68rem; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--white);
+  text-decoration:none; opacity:.8;
+  transition:opacity .3s, color .3s;
+}
+.nav-links a:hover { opacity:1; color:var(--accent); }
+
+/* ── TICKER fixed bottom ── */
+.ticker {
+  position:fixed; bottom:0; left:0; right:0;
+  height:var(--ticker-h); background:var(--accent);
+  overflow:hidden; white-space:nowrap;
+  display:flex; align-items:center; z-index:200;
+}
+.ticker-inner { display:inline-block; animation:tick 22s linear infinite; }
+.ticker span {
+  font-family:'Bebas Neue',cursive;
+  font-size:1rem; letter-spacing:.1em;
+  color:var(--white); padding:0 28px;
+}
+.ticker span.dot { color:rgba(245,240,235,.4); padding:0; }
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ── HERO ── */
+.hero {
+  position:relative;
+  margin-top:var(--nav-h);
+  height:calc(100vh - var(--nav-h) - var(--ticker-h));
+  overflow:hidden;
+}
+.hero-reel {
+  position:absolute; inset:0;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px;
+}
+
+/* ── REEL CELL ── */
+.reel-cell {
+  position:relative; overflow:hidden; background:#111;
+  cursor:none;
+}
+/* dark gradient overlay — pointer-events OFF so hover works everywhere */
+.reel-cell::after {
+  content:''; position:absolute; inset:0; z-index:3;
+  background:linear-gradient(to bottom, transparent 30%, rgba(5,5,5,.85) 100%);
+  pointer-events:none;
+}
+/* poster image — visible by default */
+/* video — koyu arka planda, hover'da parlıyor */
+.reel-video {
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+  z-index:2; opacity:0.72;
+  transition:opacity .6s ease;
+  pointer-events:none;
+}
+.reel-cell:hover .reel-video { opacity:1; }
+
+.reel-label {
+  position:absolute; bottom:20px; left:20px; z-index:4;
+  font-family:'Space Mono',monospace; font-size:.6rem;
+  letter-spacing:.2em; text-transform:uppercase;
+  color:rgba(245,240,235,.4); transition:color .3s;
+  pointer-events:none;
+}
+.reel-cell:hover .reel-label { color:var(--accent); }
+
+/* ── HERO CONTENT ── */
+.hero-content {
+  position:absolute;
+  bottom:48px; left:48px; right:48px;
+  z-index:5; pointer-events:none;
+}
+.hero-content a { pointer-events:all; }
+.hero-eyebrow {
+  font-family:'Space Mono',monospace;
+  font-size:.65rem; letter-spacing:.3em;
+  color:var(--accent); text-transform:uppercase;
+  margin-bottom:14px;
+  opacity:0; animation:fadeUp 1s .3s forwards;
+}
+.hero-title {
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(3rem, 8vw, 7.5rem);
+  line-height:.93; letter-spacing:-.01em;
+  opacity:0; animation:fadeUp 1s .5s forwards;
+}
+.hero-title span { color:var(--accent); }
+.hero-sub {
+  font-size:.95rem; color:rgba(245,240,235,.5);
+  margin-top:16px; max-width:400px; line-height:1.65;
+  opacity:0; animation:fadeUp 1s .8s forwards;
+}
+.hero-cta {
+  display:inline-flex; align-items:center; gap:12px;
+  margin-top:28px; padding:13px 30px;
+  border:1px solid var(--accent);
+  color:var(--white); text-decoration:none;
+  font-family:'Space Mono',monospace;
+  font-size:.68rem; letter-spacing:.2em; text-transform:uppercase;
+  transition:background .3s;
+  opacity:0; animation:fadeUp 1s 1s forwards;
+}
+.hero-cta:hover { background:var(--accent); }
+.hero-arrow { width:20px; height:1px; background:currentColor; position:relative; transition:width .3s; }
+.hero-cta:hover .hero-arrow { width:32px; }
+.hero-arrow::after {
+  content:''; position:absolute; right:0; top:-3px;
+  width:7px; height:7px;
+  border-right:1px solid currentColor; border-top:1px solid currentColor;
+  transform:rotate(45deg);
+}
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(28px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── MAIN CONTENT ── */
+main { padding-bottom:calc(var(--ticker-h) + 20px); }
+.section-label {
+  font-family:'Space Mono',monospace;
+  font-size:.6rem; letter-spacing:.35em;
+  color:var(--gold); text-transform:uppercase;
+  margin-bottom:56px;
+  display:flex; align-items:center; gap:14px;
+}
+.section-label::before {
+  content:''; display:inline-block;
+  width:28px; height:1px; background:var(--gold);
+}
+
+/* SERVICES */
+.services { padding:110px 48px; }
+.services-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+.service-card {
+  background:var(--mid); padding:38px 30px;
+  position:relative; overflow:hidden;
+  min-height:270px; display:flex;
+  flex-direction:column; justify-content:flex-end;
+  transition:background .4s;
+}
+.service-card::before {
+  content:''; position:absolute;
+  bottom:0; left:0; right:0; height:3px;
+  background:var(--accent);
+  transform:scaleX(0); transform-origin:left;
+  transition:transform .4s;
+}
+.service-card:hover::before { transform:scaleX(1); }
+.service-card:hover { background:#222; }
+.service-num {
+  font-family:'Bebas Neue',cursive; font-size:3.5rem;
+  color:rgba(245,240,235,.05);
+  position:absolute; top:16px; right:20px;
+  transition:color .4s;
+}
+.service-card:hover .service-num { color:rgba(255,60,0,.12); }
+.service-icon { font-size:1.8rem; margin-bottom:18px; }
+.service-title { font-family:'Bebas Neue',cursive; font-size:1.5rem; letter-spacing:.05em; margin-bottom:8px; }
+.service-desc { font-size:.82rem; line-height:1.6; color:rgba(245,240,235,.45); }
+
+/* WORK */
+.work { padding:60px 0 110px; }
+.work-header { padding:0 48px; margin-bottom:44px; }
+.work-title { font-family:'Bebas Neue',cursive; font-size:clamp(2.8rem,6vw,5.5rem); line-height:1; }
+.work-masonry {
+  display:grid; grid-template-columns:2fr 1fr 1fr;
+  grid-template-rows:320px 210px; gap:3px; padding:0 3px;
+}
+.work-item { position:relative; overflow:hidden; background:var(--mid); }
+.work-item:first-child { grid-row:1/3; }
+.work-item img {
+  width:100%; height:100%; object-fit:cover;
+  transition:transform .8s cubic-bezier(.25,.46,.45,.94), filter .5s;
+  filter:grayscale(20%);
+}
+.work-item:hover img { transform:scale(1.07); filter:grayscale(0); }
+.work-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top,rgba(5,5,5,.85) 0%,transparent 50%);
+  opacity:0; transition:opacity .4s;
+  display:flex; align-items:flex-end; padding:22px;
+}
+.work-item:hover .work-overlay { opacity:1; }
+.work-label { font-family:'Space Mono',monospace; font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; }
+.work-tag {
+  display:inline-block; margin-top:5px;
+  padding:3px 9px; background:var(--accent);
+  font-family:'Space Mono',monospace; font-size:.55rem; letter-spacing:.12em;
+}
+
+/* VIDEO SECTION */
+.video-section { padding:70px 48px 110px; }
+.video-wrap { position:relative; width:100%; aspect-ratio:16/9; background:var(--mid); overflow:hidden; }
+.video-placeholder {
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,#111,#1a1a1a,#0d0d0d);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.video-placeholder::before {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 4px);
+}
+.drone-anim { position:absolute; top:24px; left:0; width:100%; pointer-events:none; }
+.play-btn {
+  width:76px; height:76px;
+  border:1px solid rgba(245,240,235,.3); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; margin-bottom:20px; position:relative;
+  transition:border-color .3s, transform .3s;
+}
+.play-btn::before {
+  content:''; position:absolute; inset:-7px; border-radius:50%;
+  border:1px solid rgba(255,60,0,.2);
+  animation:pulse 2s ease-in-out infinite;
+}
+.play-btn:hover { border-color:var(--accent); transform:scale(1.1); }
+.play-btn svg { margin-left:4px; }
+.video-caption { font-family:'Space Mono',monospace; font-size:.62rem; letter-spacing:.25em; color:rgba(245,240,235,.3); text-transform:uppercase; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.3);opacity:0} }
+
+/* STATS */
+.stats {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  margin:0 48px;
+  border-top:1px solid rgba(245,240,235,.08);
+  border-bottom:1px solid rgba(245,240,235,.08);
+}
+.stat-item { padding:48px 36px; border-right:1px solid rgba(245,240,235,.08); }
+.stat-item:last-child { border-right:none; }
+.stat-num { font-family:'Bebas Neue',cursive; font-size:3.8rem; line-height:1; margin-bottom:6px; }
+.stat-num span { color:var(--accent); }
+.stat-label { font-size:.8rem; color:rgba(245,240,235,.38); }
+
+/* CONTACT */
+.contact { padding:130px 48px; display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
+.contact-big { font-family:'Bebas Neue',cursive; font-size:clamp(2.8rem,5.5vw,5rem); line-height:1; }
+.contact-big em { font-style:normal; color:var(--accent); display:block; }
+.contact-form { display:flex; flex-direction:column; gap:20px; }
+.form-field { position:relative; border-bottom:1px solid rgba(245,240,235,.14); padding-bottom:10px; transition:border-color .3s; }
+.form-field:focus-within { border-color:var(--accent); }
+.form-field input, .form-field textarea {
+  width:100%; background:transparent; border:none; outline:none;
+  color:var(--white); font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:300; padding:8px 0;
+}
+.form-field textarea { resize:none; height:76px; }
+.form-field label {
+  position:absolute; top:8px; left:0;
+  font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:.2em;
+  text-transform:uppercase; color:rgba(245,240,235,.28);
+  pointer-events:none; transition:all .2s;
+}
+.form-field input:focus~label,
+.form-field input:not(:placeholder-shown)~label,
+.form-field textarea:focus~label,
+.form-field textarea:not(:placeholder-shown)~label { top:-14px; font-size:.52rem; color:var(--accent); }
+.submit-btn {
+  align-self:flex-start; background:var(--accent); border:none;
+  color:var(--white); font-family:'Bebas Neue',cursive;
+  font-size:1.1rem; letter-spacing:.15em; padding:15px 34px;
+  cursor:pointer; transition:transform .2s, background .3s;
+}
+.submit-btn:hover { transform:translateY(-2px); background:#ff5520; }
+
+/* FOOTER */
+footer {
+  border-top:1px solid rgba(245,240,235,.08);
+  padding:36px 48px; display:flex; justify-content:space-between; align-items:center;
+}
+footer .logo { font-family:'Bebas Neue',cursive; font-size:1.3rem; letter-spacing:.15em; }
+footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:.14em; color:rgba(245,240,235,.22); }
+.social-links { display:flex; gap:20px; }
+.social-links a {
+  font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:.15em;
+  color:rgba(245,240,235,.38); text-decoration:none; text-transform:uppercase; transition:color .3s;
+}
+.social-links a:hover { color:var(--accent); }
+
+/* REVEAL */
+.reveal { opacity:0; transform:translateY(36px); transition:opacity .8s, transform .8s cubic-bezier(.25,.46,.45,.94); }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-d1{transition-delay:.1s} .reveal-d2{transition-delay:.2s}
+.reveal-d3{transition-delay:.3s} .reveal-d4{transition-delay:.4s}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="c-ring"></div>
+<div id="c-dot"></div>
+<div class="c-tick h" id="ct-l"></div>
+<div class="c-tick h" id="ct-r"></div>
+<div class="c-tick v" id="ct-t"></div>
+<div class="c-tick v" id="ct-b"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Beslimedia</a>
+  <ul class="nav-links">
+    <li><a href="#work">Çalışmalar</a></li>
+    <li><a href="#services">Hizmetler</a></li>
+    <li><a href="#contact">İletişim</a></li>
+  </ul>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker">
+    <span>FOTOĞRAF</span><span class="dot">·</span>
+    <span>VİDEOGRAFİ</span><span class="dot">·</span>
+    <span>DRONE ÇEKİM</span><span class="dot">·</span>
+    <span>META ADS</span><span class="dot">·</span>
+    <span>GOOGLE ADS</span><span class="dot">·</span>
+    <span>SOSYAL MEDYA</span><span class="dot">·</span>
+    <span>MARKA KİMLİĞİ</span><span class="dot">·</span>
+    <span>FOTOĞRAF</span><span class="dot">·</span>
+    <span>VİDEOGRAFİ</span><span class="dot">·</span>
+    <span>DRONE ÇEKİM</span><span class="dot">·</span>
+    <span>META ADS</span><span class="dot">·</span>
+    <span>GOOGLE ADS</span><span class="dot">·</span>
+    <span>SOSYAL MEDYA</span><span class="dot">·</span>
+    <span>MARKA KİMLİĞİ</span><span class="dot">·</span>
+  </div>
+</div>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-reel">
+
+    <!-- Panel 1: Karavan Kampı -->
+    <div class="reel-cell">
+      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster1.jpg">
+        <source src="videos/video1.mp4" type="video/mp4">
+      </video>
+      <span class="reel-label">Karavan Kampı</span>
+    </div>
+
+    <!-- Panel 2: Etkinlik Çekimi -->
+    <div class="reel-cell">
+      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster2.jpg">
+        <source src="videos/video2.mp4" type="video/mp4">
+      </video>
+      <span class="reel-label">Etkinlik Çekimi</span>
+    </div>
+
+    <!-- Panel 3: Mutfak Prodüksiyon -->
+    <div class="reel-cell">
+      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster3.jpg">
+        <source src="videos/video3.mp4" type="video/mp4">
+      </video>
+      <span class="reel-label">Mutfak Prodüksiyonu</span>
+    </div>
+
+  </div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">📍 İstanbul — Türkiye</p>
+    <h1 class="hero-title">Görsel<br><span>Hikaye</span><br>Anlatıcıları</h1>
+    <p class="hero-sub">Fotoğraf, video, drone çekimleri ve dijital pazarlama ile markanızı gözlerden kaçmaz kılıyoruz.</p>
+    <a href="#contact" class="hero-cta">Projenizi Konuşalım <span class="hero-arrow"></span></a>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <p class="section-label reveal">Ne Yapıyoruz</p>
+  <div class="services-grid">
+    <div class="service-card reveal reveal-d1">
+      <span class="service-num">01</span>
+      <div class="service-icon">📸</div>
+      <h3 class="service-title">Profesyonel Fotoğraf</h3>
+      <p class="service-desc">Ürün, portre, etkinlik ve mimari çekimler. Her kareye anlam katıyoruz.</p>
+    </div>
+    <div class="service-card reveal reveal-d2">
+      <span class="service-num">02</span>
+      <div class="service-icon">🎬</div>
+      <h3 class="service-title">Video Prodüksiyon</h3>
+      <p class="service-desc">Tanıtım filmleri, reel içerikler ve kurumsal videolar.</p>
+    </div>
+    <div class="service-card reveal reveal-d3">
+      <span class="service-num">03</span>
+      <div class="service-icon">🚁</div>
+      <h3 class="service-title">Drone Çekim</h3>
+      <p class="service-desc">Hava fotoğrafçılığı ile bakış açınızı yükseltiyoruz.</p>
+    </div>
+    <div class="service-card reveal reveal-d4">
+      <span class="service-num">04</span>
+      <div class="service-icon">🚀</div>
+      <h3 class="service-title">Dijital Pazarlama</h3>
+      <p class="service-desc">Meta & Google Ads ve sosyal medya yönetimi.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section class="work" id="work">
+  <div class="work-header">
+    <p class="section-label reveal">Seçili Çalışmalar</p>
+    <h2 class="work-title reveal">Portföy</h2>
+  </div>
+  <div class="work-masonry">
+    <div class="work-item">
+      <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80" alt="">
+      <div class="work-overlay"><div><p class="work-label">Aerial Landscape</p><span class="work-tag">Drone</span></div></div>
+    </div>
+    <div class="work-item">
+      <img src="https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=800&q=80" alt="">
+      <div class="work-overlay"><div><p class="work-label">Product Shoot</p><span class="work-tag">Fotoğraf</span></div></div>
+    </div>
+    <div class="work-item">
+      <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80" alt="">
+      <div class="work-overlay"><div><p class="work-label">Corporate Event</p><span class="work-tag">Video</span></div></div>
+    </div>
+    <div class="work-item">
+      <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80" alt="">
+      <div class="work-overlay"><div><p class="work-label">Brand Portrait</p><span class="work-tag">Fotoğraf</span></div></div>
+    </div>
+    <div class="work-item">
+      <img src="https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=800&q=80" alt="">
+      <div class="work-overlay"><div><p class="work-label">Digital Campaign</p><span class="work-tag">Meta Ads</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO SECTION -->
+<section class="video-section">
+  <p class="section-label reveal">Show Reel 2024</p>
+  <div class="video-wrap reveal">
+    <div class="video-placeholder">
+      <svg class="drone-anim" viewBox="0 0 1400 70" fill="none">
+        <path d="M-100 35 Q200 8 400 35 Q600 62 800 28 Q1000 -5 1200 35 Q1350 55 1500 32"
+          stroke="rgba(255,60,0,.18)" stroke-width="1" fill="none" stroke-dasharray="6 4"/>
+        <circle r="5" fill="rgba(255,60,0,.65)">
+          <animateMotion dur="8s" repeatCount="indefinite"
+            path="M-100 35 Q200 8 400 35 Q600 62 800 28 Q1000 -5 1200 35 Q1350 55 1500 32"/>
+        </circle>
+      </svg>
+      <div class="play-btn">
+        <svg width="16" height="19" viewBox="0 0 16 19" fill="none">
+          <path d="M1.5 1.5L14.5 9.5L1.5 17.5V1.5Z" fill="#f5f0eb" stroke="#f5f0eb" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="video-caption">Show Reel — Beslimedia 2024</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item reveal"><p class="stat-num">200<span>+</span></p><p class="stat-label">Tamamlanan Proje</p></div>
+  <div class="stat-item reveal reveal-d1"><p class="stat-num">80<span>+</span></p><p class="stat-label">Mutlu Müşteri</p></div>
+  <div class="stat-item reveal reveal-d2"><p class="stat-num">5<span>M+</span></p><p class="stat-label">İçerik Görüntülenmesi</p></div>
+  <div class="stat-item reveal reveal-d3"><p class="stat-num">4<span>+</span></p><p class="stat-label">Yıllık Deneyim</p></div>
+</div>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div>
+    <p class="section-label reveal">Birlikte Çalışalım</p>
+    <h2 class="contact-big reveal">Projeniz<br>için<em>Hazırız.</em></h2>
+    <p style="color:rgba(245,240,235,.4);font-size:.9rem;margin-top:22px;line-height:1.7;" class="reveal">
+      İster ürün çekimi, ister sosyal medya — size özel çözüm üretiyoruz.
+    </p>
+  </div>
+  <div class="contact-form reveal">
+    <div class="form-field"><input type="text" id="nm" placeholder=" "><label for="nm">Adınız</label></div>
+    <div class="form-field"><input type="email" id="em" placeholder=" "><label for="em">E-posta</label></div>
+    <div class="form-field"><input type="text" id="sv" placeholder=" "><label for="sv">Hizmet Türü</label></div>
+    <div class="form-field"><textarea id="ms" placeholder=" "></textarea><label for="ms">Mesajınız</label></div>
+    <button class="submit-btn">Mesaj Gönder →</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="logo">Beslimedia</span>
+  <p>© 2024 Beslimedia. Tüm hakları saklıdır.</p>
+  <div class="social-links">
+    <a href="#">Instagram</a>
+    <a href="#">Behance</a>
+    <a href="#">LinkedIn</a>
+  </div>
+</footer>
+
+</main>
+
+<script>
+// ── CURSOR ─────────────────────────────────────
+var ring = document.getElementById('c-ring');
+var dot  = document.getElementById('c-dot');
+var ctL  = document.getElementById('ct-l');
+var ctR  = document.getElementById('ct-r');
+var ctT  = document.getElementById('ct-t');
+var ctB  = document.getElementById('ct-b');
+var R = 20; // tick radius
+var mx=0, my=0, hist=[], trails=[];
+
+for(var i=0;i<5;i++){
+  var el=document.createElement('div');
+  el.className='c-trail';
+  el.style.cssText='width:'+(5-i)+'px;height:'+(5-i)+'px;opacity:'+(0.4-i*0.06)+';';
+  document.body.appendChild(el);
+  trails.push(el);
+}
+
+document.addEventListener('mousemove',function(e){
+  mx=e.clientX; my=e.clientY;
+  ring.style.left=mx+'px'; ring.style.top=my+'px';
+  dot.style.left=mx+'px';  dot.style.top=my+'px';
+  ctL.style.left=(mx-R)+'px'; ctL.style.top=my+'px';
+  ctR.style.left=(mx+R)+'px'; ctR.style.top=my+'px';
+  ctT.style.left=mx+'px'; ctT.style.top=(my-R)+'px';
+  ctB.style.left=mx+'px'; ctB.style.top=(my+R)+'px';
+  hist.push({x:mx,y:my});
+  if(hist.length>80) hist.shift();
+});
+document.addEventListener('mousedown',function(){
+  ring.classList.add('big');
+  setTimeout(function(){ring.classList.remove('big');},180);
+});
+document.querySelectorAll('a,button,.reel-cell,.service-card,.work-item').forEach(function(el){
+  el.addEventListener('mouseenter',function(){ring.classList.add('big');});
+  el.addEventListener('mouseleave',function(){ring.classList.remove('big');});
+});
+(function loop(){
+  trails.forEach(function(el,i){
+    var p=hist[Math.max(0,hist.length-1-(i+1)*4)]||{x:mx,y:my};
+    el.style.left=p.x+'px'; el.style.top=p.y+'px';
+  });
+  requestAnimationFrame(loop);
+})();
+
+// ── SCROLL REVEAL ───────────────────────────────
+var ro=new IntersectionObserver(function(es){
+  es.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(function(el){ ro.observe(el); });
+
+// ── STAT COUNTERS ───────────────────────────────
+var so=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+    if(!e.isIntersecting||e.target.dataset.done) return;
+    e.target.dataset.done='1';
+    var num=e.target.querySelector('.stat-num');
+    if(!num) return;
+    var spanHTML=num.querySelector('span').outerHTML;
+    var val=parseInt(num.childNodes[0].textContent);
+    if(isNaN(val)) return;
+    var c=0;
+    var iv=setInterval(function(){
+      c+=Math.ceil(val/50);
+      if(c>=val){c=val;clearInterval(iv);}
+      num.innerHTML=c+spanHTML;
+    },22);
+  });
+},{threshold:.5});
+document.querySelectorAll('.stat-item').forEach(function(el){ so.observe(el); });
+
+// ── TICKER ──────────────────────────────────────
+var tk=document.getElementById('ticker');
+tk.innerHTML+=tk.innerHTML;
+</script>
+</body>
+</html>
