@@ -23,31 +23,44 @@ body {
   overflow-x:hidden; cursor:none;
 }
 
-/* ── CURSOR ── */
+/* ── CURSOR — kamera kadrajı ── */
 #c-ring {
-  position:fixed; width:34px; height:34px;
-  border:1.5px solid rgba(245,240,235,.5); border-radius:50%;
+  position:fixed;
+  width:40px; height:28px;
   pointer-events:none; z-index:9999;
   transform:translate(-50%,-50%);
-  transition:width .15s, height .15s, border-color .15s;
+  transition:width .15s, height .15s;
 }
+/* 4 köşe bracket */
+#c-ring::before, #c-ring::after,
+#c-ring .br, #c-ring .bl {
+  content:'';
+  position:absolute;
+  width:8px; height:8px;
+  border-color:rgba(245,240,235,.8);
+  border-style:solid;
+}
+#c-ring::before { top:0; left:0; border-width:1.5px 0 0 1.5px; }
+#c-ring::after  { top:0; right:0; border-width:1.5px 1.5px 0 0; }
+#c-ring .br { bottom:0; right:0; border-width:0 1.5px 1.5px 0; }
+#c-ring .bl { bottom:0; left:0;  border-width:0 0 1.5px 1.5px; }
+
+#c-ring.big { width:58px; height:40px; }
+#c-ring.big::before, #c-ring.big::after,
+#c-ring.big .br, #c-ring.big .bl {
+  border-color:var(--accent);
+}
+
 #c-dot {
-  position:fixed; width:4px; height:4px;
+  position:fixed; width:3px; height:3px;
   background:var(--accent); border-radius:50%;
   pointer-events:none; z-index:10000;
   transform:translate(-50%,-50%);
   box-shadow:0 0 6px var(--accent);
 }
-#c-ring.big { width:52px; height:52px; border-color:var(--accent); }
-.c-tick {
-  position:fixed; background:rgba(245,240,235,.55);
-  pointer-events:none; z-index:9999;
-}
-.c-tick.h { width:8px; height:1px; transform:translate(-50%,-50%); }
-.c-tick.v { width:1px; height:8px; transform:translate(-50%,-50%); }
 .c-trail {
   position:fixed; border-radius:50%;
-  background:rgba(255,60,0,.4);
+  background:rgba(255,60,0,.35);
   pointer-events:none; z-index:9996;
   transform:translate(-50%,-50%);
 }
@@ -357,12 +370,8 @@ footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:
 <body>
 
 <!-- CURSOR -->
-<div id="c-ring"></div>
+<div id="c-ring"><span class="br"></span><span class="bl"></span></div>
 <div id="c-dot"></div>
-<div class="c-tick h" id="ct-l"></div>
-<div class="c-tick h" id="ct-r"></div>
-<div class="c-tick v" id="ct-t"></div>
-<div class="c-tick v" id="ct-b"></div>
 
 <!-- NAV -->
 <nav>
@@ -561,11 +570,7 @@ footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:
 // ── CURSOR ─────────────────────────────────────
 var ring = document.getElementById('c-ring');
 var dot  = document.getElementById('c-dot');
-var ctL  = document.getElementById('ct-l');
-var ctR  = document.getElementById('ct-r');
-var ctT  = document.getElementById('ct-t');
-var ctB  = document.getElementById('ct-b');
-var R = 20; // tick radius
+var R = 20;
 var mx=0, my=0, hist=[], trails=[];
 
 for(var i=0;i<5;i++){
@@ -580,10 +585,6 @@ document.addEventListener('mousemove',function(e){
   mx=e.clientX; my=e.clientY;
   ring.style.left=mx+'px'; ring.style.top=my+'px';
   dot.style.left=mx+'px';  dot.style.top=my+'px';
-  ctL.style.left=(mx-R)+'px'; ctL.style.top=my+'px';
-  ctR.style.left=(mx+R)+'px'; ctR.style.top=my+'px';
-  ctT.style.left=mx+'px'; ctT.style.top=(my-R)+'px';
-  ctB.style.left=mx+'px'; ctB.style.top=(my+R)+'px';
   hist.push({x:mx,y:my});
   if(hist.length>80) hist.shift();
 });
