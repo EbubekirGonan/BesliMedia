@@ -411,7 +411,7 @@ footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:
 
     <!-- Panel 1: Karavan Kampı -->
     <div class="reel-cell">
-      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster1.jpg">
+      <video class="reel-video" muted loop playsinline preload="metadata" poster="videos/poster1.jpg">
         <source src="videos/video1_optimized.mp4" type="video/mp4">
       </video>
       <span class="reel-label">Karavan Kampı</span>
@@ -419,7 +419,7 @@ footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:
 
     <!-- Panel 2: Etkinlik Çekimi -->
     <div class="reel-cell">
-      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster2.jpg">
+      <video class="reel-video" muted loop playsinline preload="metadata" poster="videos/poster2.jpg">
         <source src="videos/video2_optimized.mp4" type="video/mp4">
       </video>
       <span class="reel-label">Etkinlik Çekimi</span>
@@ -427,7 +427,7 @@ footer p { font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:
 
     <!-- Panel 3: Mutfak Prodüksiyon -->
     <div class="reel-cell">
-      <video class="reel-video" autoplay muted loop playsinline poster="videos/poster3.jpg">
+      <video class="reel-video" muted loop playsinline preload="metadata" poster="videos/poster3.jpg">
         <source src="videos/video3_optimized.mp4" type="video/mp4">
       </video>
       <span class="reel-label">Mutfak Prodüksiyonu</span>
@@ -603,6 +603,19 @@ document.querySelectorAll('a,button,.reel-cell,.service-card,.work-item').forEac
   });
   requestAnimationFrame(loop);
 })();
+
+// ── VIDEO HOVER ─────────────────────────────────
+document.querySelectorAll('.reel-cell').forEach(function(cell){
+  var vid = cell.querySelector('.reel-video');
+  if(!vid) return;
+  cell.addEventListener('mouseenter', function(){
+    vid.play().catch(function(){});
+  });
+  cell.addEventListener('mouseleave', function(){
+    vid.pause();
+    vid.currentTime = 0;
+  });
+});
 
 // ── SCROLL REVEAL ───────────────────────────────
 var ro=new IntersectionObserver(function(es){
